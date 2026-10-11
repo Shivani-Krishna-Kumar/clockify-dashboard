@@ -7,6 +7,9 @@ const metrics = require("./metrics");
 const { runSync, lastSync, hasSuccessfulSync } = require("./sync");
 const { today, addDays, isDate } = require("./dates");
 
+// A demo serves real data from a public URL, so it must never run without the password.
+if (cfg.demo && !cfg.password) throw new Error("DEMO_MODE=1 requires DASHBOARD_PASSWORD to be set.");
+
 const app = express();
 app.use(express.json());
 
@@ -43,6 +46,7 @@ function range(req) {
 app.get("/api/config", handler(() => ({
   tz: cfg.tz,
   today: today(),
+  demo: cfg.demo,
   expectedHours: cfg.expectedHours,
   excludedProjects: cfg.excludedProjects,
   projects: metrics.projectNames(),
@@ -63,7 +67,9 @@ app.get("/api/employee/:id", handler((req) => {
 }));
 
 app.get("/api/users", handler(() => metrics.listUsers()));
+const demoBlocked = () => Object.assign(new Error("This is a read-only demo; changes are disabled."), { status: 403 });
 app.patch("/api/users/:id", handler((req) => {
+  if (cfg.demo) throw demoBlocked();
   const { isTracked, expectedHours } = req.body || {};
   try {
     metrics.updateUser(req.params.id, { isTracked, expectedHours });
@@ -85,21 +91,30 @@ function startSync(days) {
   return syncing;
 }
 app.post("/api/sync", async (req, res) => {
+  if (cfg.demo) return res.status(403).json({ error: demoBlocked().message });
   await startSync(7);
   res.json({ last: lastSync() });
 });
 
 app.use(express.static(path.join(cfg.root, "public")));
 
-if (!cron.validate(cfg.syncCron)) throw new Error(`Invalid SYNC_CRON: ${cfg.syncCron}`);
-cron.schedule(cfg.syncCron, () => startSync(7), { timezone: cfg.tz });
+// Exported so a serverless host (Vercel) can run it; only `node src/server.js` starts a listener.
+module.exports = app;
 
-app.listen(cfg.port, cfg.host, () => {
-  console.log(`Dashboard on http://localhost:${cfg.port}  (office timezone: ${cfg.tz})`);
-  if (!cfg.password) console.warn("WARNING: DASHBOARD_PASSWORD is empty - anyone who can reach this port can see everyone's hours.");
-  if (!cfg.apiKey) console.warn("WARNING: CLOCKIFY_API_KEY is not set - copy .env.example to .env and fill it in.");
-  else if (!hasSuccessfulSync()) {
-    console.log("No data yet - running first sync (last 30 days)...");
-    startSync(30);
-  }
-});
+if (require.main === module) {
+  app.listen(cfg.port, cfg.host, () => {
+    console.log(`Dashboard on http://localhost:${cfg.port}  (office timezone: ${cfg.tz})`);
+    if (cfg.demo) {
+      console.log(`DEMO MODE: read-only snapshot, "today" frozen at ${cfg.demoToday}. Sync is off.`);
+      return;
+    }
+    if (!cron.validate(cfg.syncCron)) throw new Error(`Invalid SYNC_CRON: ${cfg.syncCron}`);
+    cron.schedule(cfg.syncCron, () => startSync(7), { timezone: cfg.tz });
+    if (!cfg.password) console.warn("WARNING: DASHBOARD_PASSWORD is empty - anyone who can reach this port can see everyone's hours.");
+    if (!cfg.apiKey) console.warn("WARNING: CLOCKIFY_API_KEY is not set - copy .env.example to .env and fill it in.");
+    else if (!hasSuccessfulSync()) {
+      console.log("No data yet - running first sync (last 30 days)...");
+      startSync(30);
+    }
+  });
+}

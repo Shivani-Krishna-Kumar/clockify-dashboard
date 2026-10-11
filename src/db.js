@@ -2,9 +2,24 @@ const fs = require("fs");
 const path = require("path");
 const { DatabaseSync } = require("node:sqlite");
 const cfg = require("./config");
+const { today, addDays, startOfDayUtc } = require("./dates");
 
 fs.mkdirSync(path.dirname(cfg.dbPath), { recursive: true });
+if (cfg.demo) {
+  // Fresh copy of the bundled snapshot; drop stale WAL files so they can't be replayed onto it.
+  for (const ext of ["", "-wal", "-shm"]) fs.rmSync(cfg.dbPath + ext, { force: true });
+  fs.writeFileSync(cfg.dbPath, Buffer.from(cfg.snapshot.db, "base64"));
+}
 const db = new DatabaseSync(cfg.dbPath);
+
+// Seconds for a timer that is still running. A timer on today's date counts up to "now"; a timer
+// left running on an earlier day is capped at the end of that day, so a forgotten timer can't
+// add hundreds of phantom hours.
+db.function("running_secs", (startUtc, workDate) => {
+  const start = Date.parse(startUtc);
+  const end = workDate === today() ? Date.now() : startOfDayUtc(addDays(workDate, 1));
+  return Math.max(0, Math.round((end - start) / 1000));
+});
 
 db.exec(`
   PRAGMA journal_mode = WAL;
@@ -61,7 +76,7 @@ db.exec(`
          COALESCE(p.name, 'No project') AS project_name,
          e.task, e.description, e.start_utc, e.end_utc, e.running, e.work_date,
          CASE WHEN e.running = 1
-              THEN MAX(0, CAST(strftime('%s','now') AS INTEGER) - CAST(strftime('%s', e.start_utc) AS INTEGER))
+              THEN running_secs(e.start_utc, e.work_date)
               ELSE e.seconds END AS secs
   FROM entries e
   LEFT JOIN projects p ON p.id = e.project_id

@@ -2,3 +2,6 @@ node_modules/
 .env
 data/
 .superdesign/tmp/
+# real employee data bundled for the hosted demo - never commit to a public repo
+demo-data/
+.vercel

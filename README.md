@@ -30,7 +30,7 @@ Set `DASHBOARD_PASSWORD` before exposing it on the office network (browser asks 
 - `src/sync.js` fetches users, projects and each user's entries (GET only). Every run re-reads the **last 7 days** so late backfills, edits and deletions in Clockify are picked up. Default schedule: hourly 08:00-20:00 office time (`SYNC_CRON`); the **Refresh now** button syncs on demand.
 - Days are bucketed in `OFFICE_TZ`, not UTC. An entry belongs to the day it started.
 - Projects in `EXCLUDED_PROJECTS` (default `Lunch Break`) don't count in any hours or percentages.
-- Running timers count up to "now" and show a badge.
+- Running timers count up to "now" and show a badge. A timer left running on an earlier day is capped at the end of that day (stop it in Clockify to fix the entry for good).
 - Compliance counts only completed working days (today is excluded until it ends). Weekends come from `WORKING_DAYS`; add `HOLIDAYS` as `YYYY-MM-DD,...`.
 - Status rules: **Missing** = no entries on a working day, **Partial** = below expected hours (default 8, per-person override), **Complete** = met expected hours.
 
@@ -41,6 +41,17 @@ set DB_PATH=data/demo.db
 node scripts/seed-demo.js
 npm start
 ```
+
+## Read-only demo on Vercel (to show someone)
+
+Vercel can't run the real thing (no persistent disk, no always-on process), but it can host a **read-only snapshot**:
+
+1. `npm run snapshot` - bundles a copy of `data/dashboard.db` into `demo-data/snapshot.js` (the source DB is opened read-only). **It contains real names, emails, hours and entry descriptions.**
+2. Deploy with the Vercel CLI so the file never touches git: `npx vercel deploy` (`.vercelignore` keeps `.env`, `data/` and `node_modules` out and lets `demo-data/` in). Importing from GitHub only works if `demo-data/snapshot.js` is committed, so use a **private** repo for that and `git add -f demo-data/snapshot.js`.
+3. In the Vercel project set environment variables: `DEMO_MODE=1` and `DASHBOARD_PASSWORD=<something strong>` (the server refuses to start in demo mode without it). `OFFICE_TZ` is taken from the snapshot but can be overridden.
+4. Demo mode turns off sync, Refresh now and the Team settings edits, and freezes "today" at the last day with data (`DEMO_TODAY=YYYY-MM-DD` overrides it).
+
+Re-run `npm run snapshot` and redeploy to refresh the demo.
 
 ## Keeping it running (Windows)
 

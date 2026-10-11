@@ -9,7 +9,7 @@ const dayFormat = new Intl.DateTimeFormat("en-CA", {
 });
 
 const dayOf = (value) => dayFormat.format(value instanceof Date ? value : new Date(value));
-const today = () => dayOf(new Date());
+const today = () => cfg.demoToday || dayOf(new Date());
 const isDate = (s) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 
 function addDays(dateStr, n) {
@@ -32,4 +32,15 @@ function eachDay(from, to) {
   return days;
 }
 
-module.exports = { dayOf, today, isDate, addDays, isoWeekday, isWorkingDay, eachDay };
+// First instant (ms since epoch) of a YYYY-MM-DD day in the office timezone.
+// Scans +/-14h around UTC midnight in 15-minute steps, which covers every real UTC offset.
+function startOfDayUtc(dateStr) {
+  const base = Date.parse(`${dateStr}T00:00:00Z`);
+  for (let off = -14 * 3600e3; off <= 14 * 3600e3; off += 15 * 60e3) {
+    const t = base + off;
+    if (dayOf(t) === dateStr && dayOf(t - 1) !== dateStr) return t;
+  }
+  return base;
+}
+
+module.exports = { dayOf, today, isDate, addDays, isoWeekday, isWorkingDay, eachDay, startOfDayUtc };

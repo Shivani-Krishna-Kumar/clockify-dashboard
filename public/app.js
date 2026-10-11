@@ -343,11 +343,11 @@
   async function renderSettings() {
     state.csv = null;
     const users = await api("/api/users");
-    return `<p class="muted">Untrack people who shouldn't appear (admins, contractors). Leave "expected hours" blank to use the default (${state.cfg.expectedHours}h). Changes apply immediately. Projects excluded from all hours: ${esc(state.cfg.excludedProjects.join(", ") || "none")}.</p>
+    return `${state.cfg.demo ? `<p class="hint"><strong>Read-only demo:</strong> these settings can't be changed here.</p>` : ""}<p class="muted">Untrack people who shouldn't appear (admins, contractors). Leave "expected hours" blank to use the default (${state.cfg.expectedHours}h). Changes apply immediately. Projects excluded from all hours: ${esc(state.cfg.excludedProjects.join(", ") || "none")}.</p>
       <div class="table-wrap settings"><table><thead><tr><th>Employee</th><th>Email</th><th>Tracked</th><th>Expected hours / day</th><th></th></tr></thead><tbody>
       ${users.map((u) => `<tr data-user="${esc(u.id)}"><td>${esc(u.name)}</td><td class="muted">${esc(u.email)}</td>
-        <td><input type="checkbox" data-f="isTracked" ${u.isTracked ? "checked" : ""} aria-label="Track ${esc(u.name)}"></td>
-        <td><input type="number" min="0" max="24" step="0.5" data-f="expectedHours" value="${u.expectedHours ?? ""}" placeholder="${u.defaultHours}" aria-label="Expected hours for ${esc(u.name)}"></td>
+        <td><input type="checkbox" data-f="isTracked" ${u.isTracked ? "checked" : ""} ${state.cfg.demo ? "disabled" : ""} aria-label="Track ${esc(u.name)}"></td>
+        <td><input type="number" min="0" max="24" step="0.5" data-f="expectedHours" value="${u.expectedHours ?? ""}" placeholder="${u.defaultHours}" ${state.cfg.demo ? "disabled" : ""} aria-label="Expected hours for ${esc(u.name)}"></td>
         <td class="muted" data-saved></td></tr>`).join("")}</tbody></table></div>`;
   }
 
@@ -501,6 +501,10 @@
     const fromHash = location.hash.slice(1);
     if (TABS.includes(fromHash)) state.tab = fromHash;
     $("#tzInfo").textContent = `Office timezone: ${state.cfg.tz} · excluded from hours: ${state.cfg.excludedProjects.join(", ") || "nothing"}`;
+    if (state.cfg.demo) {
+      const btn = $("#refreshBtn");
+      btn.disabled = true; btn.textContent = "Demo snapshot"; btn.title = "Read-only demo: sync is turned off";
+    }
     await refreshSyncInfo();
     render();
   })();

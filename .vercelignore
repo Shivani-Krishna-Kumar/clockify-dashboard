@@ -1,0 +1,10 @@
+# Used by `vercel deploy` (CLI). With this file present Vercel does NOT read .gitignore,
+# so secrets and local data are listed here explicitly. demo-data/ is intentionally NOT ignored.
+.env
+.env.*
+data
+node_modules
+.superdesign
+.git
+# stale duplicate copy of the whole project nested inside this folder
+/clockify-dashboard
