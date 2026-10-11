@@ -96,6 +96,11 @@ app.post("/api/sync", async (req, res) => {
   res.json({ last: lastSync() });
 });
 
+// Hosts like Vercel serve public/ files without running the password check above. If the page's API
+// calls come back 401, the UI sends the browser here: a top-level request always gets the browser's
+// password prompt, and on success we return to the dashboard.
+app.get("/login", (req, res) => res.redirect("/"));
+
 app.use(express.static(path.join(cfg.root, "public")));
 
 // Exported so a serverless host (Vercel) can run it; only `node src/server.js` starts a listener.

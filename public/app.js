@@ -67,6 +67,7 @@
   // ---------- api ----------
   async function api(path, opts) {
     const res = await fetch(path, opts);
+    if (res.status === 401) { location.assign("/login"); throw new Error("Password required"); }
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
     return body;
