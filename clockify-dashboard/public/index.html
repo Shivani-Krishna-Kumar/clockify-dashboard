@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team Time Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Team Time Dashboard</h1>
+      <p class="muted" id="tzInfo"></p>
+    </div>
+    <div class="sync">
+      <span class="muted" id="syncInfo"></span>
+      <button id="refreshBtn" class="btn">Refresh now</button>
+    </div>
+  </header>
+  <div id="banner" class="banner" hidden></div>
+
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Views">
+    <button role="tab" data-tab="today">Today</button>
+    <button role="tab" data-tab="matrix">Employee × Project</button>
+    <button role="tab" data-tab="projects">Projects</button>
+    <button role="tab" data-tab="compliance">Compliance</button>
+    <button role="tab" data-tab="settings">Team settings</button>
+  </nav>
+
+  <section class="controls" id="controls" aria-label="Date filters"></section>
+  <main id="view" aria-live="polite"></main>
+
+  <div id="scrim" class="scrim" hidden></div>
+  <aside id="drawer" class="drawer" hidden aria-label="Employee detail"></aside>
+
+  <script src="app.js"></script>
+</body>
+</html>

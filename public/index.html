@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team Time Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="side">
+      <div class="brand">
+        <h1>Team Time Dashboard</h1>
+        <p class="muted" id="tzInfo"></p>
+      </div>
+
+      <nav class="nav" id="tabs" aria-label="Views">
+        <button class="nav-btn" data-tab="today">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Today
+        </button>
+        <button class="nav-btn" data-tab="matrix">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+          Employee × Project
+        </button>
+        <button class="nav-btn" data-tab="projects">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Projects
+        </button>
+        <button class="nav-btn" data-tab="compliance">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+          Compliance
+        </button>
+      </nav>
+
+      <div class="side-foot">
+        <button class="nav-btn" data-tab="settings">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+          Team settings
+        </button>
+        <p class="muted" id="syncInfo"></p>
+        <button id="refreshBtn" class="btn">Refresh now</button>
+      </div>
+    </aside>
+
+    <div class="content">
+      <div id="banner" class="banner" hidden></div>
+      <header class="pagehead">
+        <div class="pagetitle">
+          <h2 id="pageTitle">Today</h2>
+          <p class="muted" id="pageSub"></p>
+        </div>
+        <div class="controls" id="controls" aria-label="Page controls"></div>
+      </header>
+      <main id="view" aria-live="polite"></main>
+    </div>
+  </div>
+
+  <div id="scrim" class="scrim" hidden></div>
+  <aside id="drawer" class="drawer" hidden aria-label="Employee detail"></aside>
+
+  <script src="app.js"></script>
+</body>
+</html>
