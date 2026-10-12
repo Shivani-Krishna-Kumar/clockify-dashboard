@@ -5,3 +5,6 @@ data/
 # real employee data bundled for the hosted demo - never commit to a public repo
 demo-data/
 .vercel
+
+.vercel
+.env*

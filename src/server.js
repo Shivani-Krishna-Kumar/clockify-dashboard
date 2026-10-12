@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const cron = require("node-cron");
@@ -100,6 +101,21 @@ app.post("/api/sync", async (req, res) => {
 // calls come back 401, the UI sends the browser here: a top-level request always gets the browser's
 // password prompt, and on success we return to the dashboard.
 app.get("/login", (req, res) => res.redirect("/"));
+
+// The three page files are read with literal paths on purpose: Vercel bundles only the files it can
+// find by reading the code, and it does not find a directory handed to express.static. These routes
+// also run behind the password check above on every host.
+const page = (type, file) => ({ type, body: file });
+const pages = {
+  "/": page("text/html; charset=utf-8", fs.readFileSync(path.join(__dirname, "..", "public", "index.html"))),
+  "/index.html": page("text/html; charset=utf-8", fs.readFileSync(path.join(__dirname, "..", "public", "index.html"))),
+  "/app.js": page("text/javascript; charset=utf-8", fs.readFileSync(path.join(__dirname, "..", "public", "app.js"))),
+  "/style.css": page("text/css; charset=utf-8", fs.readFileSync(path.join(__dirname, "..", "public", "style.css"))),
+};
+app.get(Object.keys(pages), (req, res) => {
+  const p = pages[req.path];
+  res.set("Cache-Control", "no-cache").type(p.type).send(p.body);
+});
 
 app.use(express.static(path.join(cfg.root, "public")));
 
